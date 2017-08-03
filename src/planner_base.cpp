@@ -1,4 +1,4 @@
-#include <jps3d/planner/planner_base.h>
+#include <jps3d/planner_base.h>
 
 using namespace JPS;
 

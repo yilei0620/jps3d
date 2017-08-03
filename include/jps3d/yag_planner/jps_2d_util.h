@@ -1,23 +1,25 @@
 /**
- * @file jps_3d_util.h
- * @brief JPS::JPS3DUtil Class
+ * @file jps_2d_util.h
+ * @brief JPS::JPS2DUtil Class
  */
-#ifndef JPS_JPS3D_UTIL_H
-#define JPS_JPS3D_UTIL_H
+#ifndef JPS_JPS2D_UTIL_H
+#define JPS_JPS2D_UTIL_H
 
-#include <jps3d/planner/planner_base.h>
+#include <jps3d/planner_base.h>
 #include <yagsbpl/yagsbpl_base.h>
 #include <yagsbpl/A_star.h>
 #include <unordered_map>
 
 namespace JPS {
- /**
-   * @brief 3D JPS Planner
+  /**
+   * @brief 2D JPS Planner
+   *
+   * Uses 3D map but only 2D primitives and rules
    */
-class JPS3DUtil : public PlannerBase
+class JPS2DUtil : public PlannerBase
 {
   public:
-    ///Node class for JPS3D
+    ///Node class for JPS2D
     class Node {
       public:
         Vec3i pn; /**< Indices of this node */
@@ -35,7 +37,7 @@ class JPS3DUtil : public PlannerBase
       }
     };
 
-    JPS3DUtil(bool verbose = false);
+    JPS2DUtil(bool verbose = false);
 
     bool plan(const Vec3f &start, const Vec3f &goal, decimal_t eps = 1);
 
@@ -63,7 +65,7 @@ class JPS3DUtil : public PlannerBase
 
     GenericSearchGraphDescriptor<Node, float> myGraph;
 
-    Vec3i Vec3i_null;/**< Null node*/
+    Vec3i Vec3i_null; /**< Null node*/
     Node _goal_node;
 
     std::unordered_map<Vec3i, vec_Vec3i, container_hash<Vec3i>> _obs_map;

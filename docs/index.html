@@ -64,7 +64,7 @@ $(function() {
 <div class="title">MRSL Jump Point Search Planning Library </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>Implementation of Jump Point Search with <a href="https://www.math.upenn.edu/~subhrabh/html_cache/7f068a4d19ed85a15c9e25ecae8b40c1.html">YagSBPL</a>. Original jump point seach algorithm is proposed in <a href="https://www.aaai.org/ocs/index.php/AAAI/AAAI11/paper/download/3761/4007">"D. Harabor and A. Grastien. Online Graph Pruning for Pathfinding on Grid Maps. In National Conference on Artificial Intelligence (AAAI), 2011"</a>. The 3D version is proposed in "S. Liu, M. Watterson, K. Mohta, K. Sun, S. Bhattacharya, C.J. Taylor and V. Kumar. Planning Dynamically Feasible Trajectories for Quadrotors using Safe Flight Corridors in 3-D Complex Environments. ICRA 2017".</p>
+<div class="textblock"><p>Implementation of Jump Point Search with two different back-end graph search libraries: <a href="https://www.math.upenn.edu/~subhrabh/html_cache/7f068a4d19ed85a15c9e25ecae8b40c1.html">YagSBPL</a> and NX lib. Original jump point seach algorithm is proposed in <a href="https://www.aaai.org/ocs/index.php/AAAI/AAAI11/paper/download/3761/4007">"D. Harabor and A. Grastien. Online Graph Pruning for Pathfinding on Grid Maps. In National Conference on Artificial Intelligence (AAAI), 2011"</a>. The 3D version is proposed in "S. Liu, M. Watterson, K. Mohta, K. Sun, S. Bhattacharya, C.J. Taylor and V. Kumar. Planning Dynamically Feasible Trajectories for Quadrotors using Safe Flight Corridors in 3-D Complex Environments. ICRA 2017".</p>
 <h2>Compilation</h2>
 <p>Required:</p><ul>
 <li>Boost</li>
@@ -77,6 +77,7 @@ $(function() {
 <li><code>AStarUtil</code></li>
 <li><code>JPS2DUtil</code></li>
 <li><code>JPS3DUtil</code></li>
+<li><code>NXJPS3DUtil</code></li>
 </ul>
 <p>The results from <code>AStarUtil</code> and <code>JPS2DUtil</code> are plotted in <a href="https://github.com/sikang/jps3d/blob/master/data/corridor.jpg">corridor.jpg</a>. </p><div class="image">
 <img src="corridor.jpg" alt="corridor.jpg"/>

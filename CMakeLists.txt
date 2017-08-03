@@ -17,7 +17,7 @@ IF(USE_ROS)
     DEPENDS Eigen3 
     CATKIN_DEPENDS 
     INCLUDE_DIRS include
-    LIBRARIES jps_lib
+    LIBRARIES yag_jps_lib nx_jps_lib
     )
   INCLUDE_DIRECTORIES(${catkin_INCLUDE_DIRS})
   LIST(APPEND LINK_LIBS ${catkin_LIBRARIES})
@@ -63,17 +63,24 @@ INCLUDE_DIRECTORIES(
 #add_library(jps_3d src/planner/nx_jps_3d.cpp
 #  src/planner/jps_3D.cpp
 #  src/planner/planner_base.cpp)
-add_library(jps_lib src/a_star_util.cpp
-  src/jps_2d_util.cpp
-  src/jps_3d_util.cpp
+add_library(yag_jps_lib src/yag_planner/a_star_util.cpp
+  src/yag_planner/jps_2d_util.cpp
+  src/yag_planner/jps_3d_util.cpp
   src/planner_base.cpp)
-target_link_libraries(jps_lib ${Boost_LIBRARIES})
+target_link_libraries(yag_jps_lib ${Boost_LIBRARIES})
+
+add_library(nx_jps_lib src/nx_planner/nx_jps_3d.cpp
+  src/nx_planner/jps_3D.cpp
+  src/planner_base.cpp)
+target_link_libraries(nx_jps_lib ${Boost_LIBRARIES})
+
+
 
 add_executable(test_planner_2d test/test_planner_2d.cpp)
-target_link_libraries(test_planner_2d jps_lib ${YAMLCPP_LIBRARIES} ${Boost_LIBRARIES} ${VTK_LIBRARIES})
+target_link_libraries(test_planner_2d yag_jps_lib ${YAMLCPP_LIBRARIES} ${Boost_LIBRARIES} ${VTK_LIBRARIES})
 
 IF(USE_ROS)
-  install(TARGETS jps_lib test_planner_2d
+  install(TARGETS yag_jps_lib nx_jps_lib test_planner_2d
     ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
@@ -82,7 +89,7 @@ IF(USE_ROS)
     DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
     )
 ELSE()
-  install(TARGETS jps_lib test_planner_2d
+  install(TARGETS yag_jps_lib nx_jps_lib test_planner_2d
     ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
     LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
     RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)

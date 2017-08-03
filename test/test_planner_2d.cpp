@@ -1,7 +1,7 @@
 #include "timer.hpp"
 #include "map_reader.hpp"
-#include <jps3d/planner/a_star_util.h>
-#include <jps3d/planner/jps_2d_util.h>
+#include <jps3d/yag_planner/a_star_util.h>
+#include <jps3d/yag_planner/jps_2d_util.h>
 
 #define VISUALIZE 1
 #if VISUALIZE
