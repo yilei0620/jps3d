@@ -74,6 +74,8 @@ add_library(nx_jps_lib src/nx_planner/nx_jps_3d.cpp
   src/planner_base.cpp)
 target_link_libraries(nx_jps_lib ${Boost_LIBRARIES})
 
+add_executable(create_map test/create_map.cpp)
+target_link_libraries(create_map ${YAMLCPP_LIBRARIES})
 
 
 add_executable(test_planner_2d test/test_planner_2d.cpp)

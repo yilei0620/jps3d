@@ -37,6 +37,8 @@ In this library, we consider 3D voxel grid but user can write their own 2D map u
  - ```NXJPS3DUtil```
 
 The results from ```AStarUtil``` and ```JPS2DUtil``` are plotted in [corridor.jpg](https://github.com/sikang/jps3d/blob/master/data/corridor.jpg).
+Green path is from A*, black path is from JPS.
+
 ![Visualization](./data/corridor.jpg)
 ```sh
 $ ./build/test_planner_2d ../data/corridor.yaml

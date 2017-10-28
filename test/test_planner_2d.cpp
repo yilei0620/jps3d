@@ -1,5 +1,5 @@
 #include "timer.hpp"
-#include "map_reader.hpp"
+#include "read_map.hpp"
 #include <jps3d/yag_planner/a_star_util.h>
 #include <jps3d/yag_planner/jps_2d_util.h>
 
@@ -18,25 +18,27 @@ int main(int argc, char ** argv){
     return -1;
   }
 
-  MapReader<Vec3i, Vec3f> reader(argv[1]); // Map read from a given file
+  // Read the map from yaml
+  MapReader<Vec3i, Vec3f> reader(argv[1], true); // Map read from a given file
   if(!reader.exist()) {
-    printf(ANSI_COLOR_RED "Cannot find input file [%s]!\n" ANSI_COLOR_RESET, argv[1]);
+    printf(ANSI_COLOR_RED "Cannot read input file [%s]!\n" ANSI_COLOR_RESET, argv[1]);
     return -1;
   }
 
+  // store map in map_util
   std::unique_ptr<VoxelMapUtil> map_util;
   map_util.reset(new VoxelMapUtil);
   map_util->setMap(reader.origin(), reader.dim(), reader.data(), reader.resolution());
-  map_util->dilate(0.1, 0.1);
-  map_util->dilating();
+  //map_util->dilate(0.1, 0.1);
+  //map_util->dilating();
 
-  const Vec3f start(2.5, -2, 0.0);
-  const Vec3f goal(35, 2.5, 0.0);
+  const Vec3f start(reader.start(0), reader.start(1), reader.start(2));
+  const Vec3f goal(reader.goal(0), reader.goal(1), reader.goal(2));
 
-  std::unique_ptr<PlannerBase> planner_jps(new JPS2DUtil(false)); // Declare a jps planner
+  std::unique_ptr<PlannerBase> planner_jps(new JPS2DUtil(true)); // Declare a jps planner
   planner_jps->setMapUtil(map_util.get()); // Set collision checking function
 
-  std::unique_ptr<PlannerBase> planner_astar(new AStarUtil(false)); // Declare a A* planner
+  std::unique_ptr<PlannerBase> planner_astar(new AStarUtil(true)); // Declare a A* planner
   planner_astar->setMapUtil(map_util.get()); // Set collision checking function
 
   Timer time_jps(true);
@@ -51,12 +53,12 @@ int main(int argc, char ** argv){
   printf("AStar Path Distance: %f\n", total_distance3f(planner_astar->getRawPath()));
 
 #if VISUALIZE
-  const Vec3i dim = reader.dim();
+  const Vec3i dimI = map_util->getDim();
   const Vec3i startI = map_util->floatToInt(start);
   const Vec3i goalI= map_util->floatToInt(goal);
   std::string outputFilename = "output.jpg"; 
   // Create a 100x100 image to save into the jpeg file
-  int extent[6] = { 0, dim(0), 0, dim(1), 0, 0 };
+  int extent[6] = { 0, dimI(0), 0, dimI(1), 0, 0 };
   vtkSmartPointer<vtkImageCanvasSource2D> imageSource =
     vtkSmartPointer<vtkImageCanvasSource2D>::New();
   imageSource->SetExtent( extent );
@@ -68,8 +70,8 @@ int main(int argc, char ** argv){
   imageSource->FillBox( extent[0], extent[1], extent[2], extent[3] );
 
   imageSource->SetDrawColor(127.0, 127.0, 127.0);
-  for(int x = 0; x < dim(0); x ++) {
-    for(int y = 0; y < dim(1); y ++) {
+  for(int x = 0; x < dimI(0); x ++) {
+    for(int y = 0; y < dimI(1); y ++) {
       if(!map_util->isFree(Vec3i(x, y, 0))) {
         imageSource->DrawPoint(x, y);
       }
@@ -82,6 +84,7 @@ int main(int argc, char ** argv){
   imageSource->SetDrawColor(255.0, 0.0, 0.0);
   imageSource->DrawCircle(goalI[0], goalI[1], 5);
 
+  // Draw path from jps as black
   if(valid_jps) {
     vec_Vec3f path = planner_jps->getRawPath();
     imageSource->SetDrawColor(0.0, 0.0, 0.0);
@@ -93,6 +96,7 @@ int main(int argc, char ** argv){
 
   }
 
+  // Draw path from A* as green
   if(valid_astar) {
     vec_Vec3f path = planner_astar->getRawPath();
     imageSource->SetDrawColor(0.0, 200.0, 0.0);
