@@ -5,8 +5,8 @@
 #ifndef JPS_PLANNER_BASE_H
 #define JPS_PLANNER_BASE_H
 
-#include <stack>
-#include <boost/bind.hpp>
+#include <iostream>
+//#include <boost/bind.hpp>
 #include <jps3d/basic_type/data_utils.h>
 #include <jps3d/collision_checking/voxel_map_util.h>
 

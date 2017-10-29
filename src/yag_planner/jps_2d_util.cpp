@@ -168,13 +168,14 @@ void JPS2DUtil::getSuccessors(Node &n, std::vector<Node> *s,
   vec_Vec3i ns;
   ns = prune(n.pn, n.dir);
 
+  //ps_.push_back(_map_util->intToFloat(n.pn));
   for (const auto &add : ns) {
     Vec3i new_pn = jump(n.pn, add);
     if (new_pn != Vec3i_null) {
       Node jpn(new_pn, add);
       s->push_back(jpn);
       c->push_back((n.pn - new_pn).cast<float>().norm());
-      ps_.push_back(_map_util->intToFloat(new_pn));
+      //ps_.push_back(_map_util->intToFloat(new_pn));
     }
   }
 }

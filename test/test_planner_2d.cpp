@@ -35,7 +35,7 @@ int main(int argc, char ** argv){
   const Vec3f start(reader.start(0), reader.start(1), reader.start(2));
   const Vec3f goal(reader.goal(0), reader.goal(1), reader.goal(2));
 
-  std::unique_ptr<PlannerBase> planner_jps(new JPS2DUtil(true)); // Declare a jps planner
+  std::unique_ptr<JPS2DUtil> planner_jps(new JPS2DUtil(true)); // Declare a jps planner
   planner_jps->setMapUtil(map_util.get()); // Set collision checking function
 
   std::unique_ptr<PlannerBase> planner_astar(new AStarUtil(true)); // Declare a A* planner
@@ -94,6 +94,14 @@ int main(int argc, char ** argv){
       imageSource->FillTube(p1[0], p1[1], p2[0], p2[1], 2);
     }
 
+    /*
+    vec_Vec3f ps = planner_jps->ps_;
+    imageSource->SetDrawColor(0.0, 127.0, 255.0);
+    for(int i = 0; i < ps.size(); i++) {
+      Vec3i pn =  map_util->floatToInt(ps[i]);
+      imageSource->DrawCircle(pn(0), pn(1), 1);
+    }
+    */
   }
 
   // Draw path from A* as green

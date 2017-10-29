@@ -17,7 +17,7 @@ IF(USE_ROS)
     DEPENDS Eigen3 
     CATKIN_DEPENDS 
     INCLUDE_DIRS include
-    LIBRARIES yag_jps_lib nx_jps_lib
+    LIBRARIES yag_jps_lib nx_jps_lib jps_lib
     )
   INCLUDE_DIRECTORIES(${catkin_INCLUDE_DIRS})
   LIST(APPEND LINK_LIBS ${catkin_LIBRARIES})
@@ -54,15 +54,13 @@ ELSE()
   MESSAGE(FATAL_ERROR "Could not find yaml-cpp.")
 ENDIF()
 
-INCLUDE_DIRECTORIES(
-  include
-  ${EIGEN3_INCLUDE_DIRS}
-  )
+INCLUDE_DIRECTORIES( include ${EIGEN3_INCLUDE_DIRS})
 
 
-#add_library(jps_3d src/planner/nx_jps_3d.cpp
-#  src/planner/jps_3D.cpp
-#  src/planner/planner_base.cpp)
+add_library(jps_lib src/planner/graph_search.cpp
+  src/planner/astar_2d_util.cpp
+  src/planner_base.cpp)
+
 add_library(yag_jps_lib src/yag_planner/a_star_util.cpp
   src/yag_planner/jps_2d_util.cpp
   src/yag_planner/jps_3d_util.cpp

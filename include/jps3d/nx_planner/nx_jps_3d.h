@@ -5,7 +5,6 @@
 
 #include <jps3d/planner_base.h>
 #include <jps3d/nx_planner/jps_3D.h>
-#include <iostream>
 
 namespace JPS {
   class NXJPS3DUtil : public PlannerBase {
