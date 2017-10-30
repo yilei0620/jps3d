@@ -11,7 +11,6 @@
 #include <limits>                         // std::numeric_limits
 #include <vector>                         // std::vector
 #include <unordered_map>                  // std::unordered_map
-#include <array>                          // std::array
 
 namespace JPS
 {
@@ -86,44 +85,66 @@ namespace JPS
        * @brief Graph search
        *
        */
-      GraphSearch(const char* cMap, int xDim, int yDim,  double eps = 1, bool verbose = false);
+      GraphSearch(const char* cMap, int xDim, int yDim, double eps = 1, bool verbose = false);
+      GraphSearch(const char* cMap, int xDim, int yDim, int zDim, double eps = 1, bool verbose = false);
 
       bool plan(int xStart, int yStart, int xGoal, int yGoal, int max_expand = -1);
+      bool plan(int xStart, int yStart, int zStart, int xGoal, int yGoal, int zGoal, int max_expand = -1);
 
       void useJps();
+
+      void setMaxExpand();
+
       std::vector<StatePtr> getPath() const;
 
       std::vector<StatePtr> getOpenedState() const;
 
     private:
+      bool plan(StatePtr& currNode_ptr, int max_expand, int start_id, int goal_id);
       void getSucc(const StatePtr& curr, std::vector<int>& succ_ids, std::vector<double>& succ_costs);
       void getJpsSucc(const StatePtr& curr, std::vector<int>& succ_ids, std::vector<double>& succ_costs);
       std::vector<StatePtr> recoverPath(StatePtr node, int id);
+
       int coordToId(int x, int y) const;
+      int coordToId(int x, int y, int z) const;
+
       bool isFree(int x, int y) const;
+      bool isFree(int x, int y, int z) const;
+
       bool isOccupied(int x, int y) const;
-      double get_heur(int x, int y) const;
-      double get_heur(int x, int y, int z) const;
+      bool isOccupied(int x, int y, int z) const;
+
+      double getHeur(int x, int y) const;
+      double getHeur(int x, int y, int z) const;
 
       bool hasForced(int x, int y, int dx, int dy);
-      std::vector<std::array<int, 2>> prune(int x, int y, int dx, int dy);
+      bool hasForced(int x, int y, int z, int dx, int dy, int dz);
+
+      std::vector<std::vector<int>> prune(int x, int y, int dx, int dy);
+      std::vector<std::vector<int>> prune(int x, int y, int z, int dx, int dy, int dz);
+
       bool jump(int x, int y, int dx, int dy, int& new_x, int& new_y);
+      bool jump(int x, int y, int z, int dx, int dy, int dz, int& new_x, int& new_y, int& new_z);
 
       const char* cMap_;
-      priorityQueue pq_;
-      std::vector<StatePtr> hm_;
-      std::vector<bool> seen_;
       int xDim_, yDim_, zDim_;
       double eps_;
       bool verbose_;
-      std::vector<StatePtr> path_;
-      
-      const char val_free_ = 0;
-      int xGoal_, yGoal_;
 
-      bool jps_ = false;
-      std::vector<std::vector<std::array<int, 2>>> add_map_;
-      std::vector<std::vector<std::array<int, 2>>> obs_map_;
+      const char val_free_ = 0;
+      int xGoal_, yGoal_, zGoal_;
+      bool use_2d_;
+      bool use_jps_ = false;
+
+      priorityQueue pq_;
+      std::vector<StatePtr> hm_;
+      std::vector<bool> seen_;
+
+      std::vector<StatePtr> path_;
+
+      std::vector<std::vector<int>> ns_;
+      std::vector<std::vector<std::vector<int>>> addMap_;
+      std::vector<std::vector<std::vector<int>>> obsMap_;
 
  };
 }

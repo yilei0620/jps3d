@@ -3,7 +3,7 @@
  * @brief JPS::GraphSearch2DUtil Class
  */
 
-#include <jps3d/planner_base.h>
+#include <jps3d/planner/planner_base.h>
 #include <jps3d/planner/graph_search.h>
 
 namespace JPS {

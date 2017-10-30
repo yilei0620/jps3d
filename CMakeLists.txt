@@ -57,8 +57,8 @@ ENDIF()
 INCLUDE_DIRECTORIES( include ${EIGEN3_INCLUDE_DIRS})
 
 
-add_library(jps_lib src/planner/graph_search.cpp
-  src/planner/graph_search_2d_util.cpp
+add_library(jps_lib src/graph_search.cpp
+  src/graph_search_2d_util.cpp
   src/planner_base.cpp)
 
 #add_library(yag_jps_lib src/yag_planner/a_star_util.cpp
