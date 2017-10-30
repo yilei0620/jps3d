@@ -90,15 +90,24 @@ namespace JPS
 
       bool plan(int xStart, int yStart, int xGoal, int yGoal, int max_expand = -1);
 
+      void useJps();
       std::vector<StatePtr> getPath() const;
+
+      std::vector<StatePtr> getOpenedState() const;
 
     private:
       void getSucc(const StatePtr& curr, std::vector<int>& succ_ids, std::vector<double>& succ_costs);
+      void getJpsSucc(const StatePtr& curr, std::vector<int>& succ_ids, std::vector<double>& succ_costs);
       std::vector<StatePtr> recoverPath(StatePtr node, int id);
       int coordToId(int x, int y) const;
       bool isFree(int x, int y) const;
+      bool isOccupied(int x, int y) const;
       double get_heur(int x, int y) const;
       double get_heur(int x, int y, int z) const;
+
+      bool hasForced(int x, int y, int dx, int dy);
+      std::vector<std::array<int, 2>> prune(int x, int y, int dx, int dy);
+      bool jump(int x, int y, int dx, int dy, int& new_x, int& new_y);
 
       const char* cMap_;
       priorityQueue pq_;
@@ -111,6 +120,11 @@ namespace JPS
       
       const char val_free_ = 0;
       int xGoal_, yGoal_;
+
+      bool jps_ = false;
+      std::vector<std::vector<std::array<int, 2>>> add_map_;
+      std::vector<std::vector<std::array<int, 2>>> obs_map_;
+
  };
 }
 #endif

@@ -85,16 +85,6 @@ vec_Vec3i JPS2DUtil::prune(const Vec3i &pn, const Vec3i &dir) {
         if (!_map_util->isFree(pn + it)) {
           if (_map_util->isFree(pn + 2 * it + dir))
             ns.push_back(2 * it + dir);
-          Vec3i d = it.cross(dir);
-          if (!_map_util->isFree(pn + it + d)) {
-            if (_map_util->isFree(pn + 2 * it + dir + d))
-              ns.push_back(2 * it + dir + d);
-          }
-          d = -d;
-          if (!_map_util->isFree(pn + it + d)) {
-            if (_map_util->isFree(pn + 2 * it + dir + d))
-              ns.push_back(2 * it + dir + d);
-          }
         }
       }
     }
@@ -168,7 +158,7 @@ void JPS2DUtil::getSuccessors(Node &n, std::vector<Node> *s,
   vec_Vec3i ns;
   ns = prune(n.pn, n.dir);
 
-  //ps_.push_back(_map_util->intToFloat(n.pn));
+  ps_.push_back(_map_util->intToFloat(n.pn));
   for (const auto &add : ns) {
     Vec3i new_pn = jump(n.pn, add);
     if (new_pn != Vec3i_null) {

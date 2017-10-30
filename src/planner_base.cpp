@@ -3,17 +3,6 @@
 using namespace JPS;
 
 PlannerBase::PlannerBase() {
-  Vec3i add;
-  for (add(0) = -1; add(0) <= 1; add(0)++) {
-    for (add(1) = -1; add(1) <= 1; add(1)++) {
-      for (add(2) = -1; add(2) <= 1; add(2)++) {
-        if (add == Vec3i::Zero())
-          continue;
-        _ns.push_back(add);
-      }
-    }
-  }
-  _status = 0;
   //**** status:
   //*** 0 -- exit normally,
   //*** 1 -- start is not free,
@@ -21,15 +10,15 @@ PlannerBase::PlannerBase() {
   //*** -1 -- no path when s & g are available
 }
 
-void PlannerBase::setMapUtil(JPS::VoxelMapUtil *map_util) { _map_util = map_util; }
+void PlannerBase::setMapUtil(std::shared_ptr<JPS::VoxelMapUtil> &map_util) { map_util_ = map_util; }
 
-int PlannerBase::status() { return _status; }
+int PlannerBase::status() { return status_; }
 
-bool PlannerBase::goal_outside() { return _goal_outside; }
+bool PlannerBase::goalOutside() { return goal_outside_; }
 
-vec_Vec3f PlannerBase::getPath() { return _path; }
+vec_Vec3f PlannerBase::getPath() { return path_; }
 
-vec_Vec3f PlannerBase::getRawPath() { return _raw_path; }
+vec_Vec3f PlannerBase::getRawPath() { return raw_path_; }
 
 vec_Vec3f PlannerBase::removePts(const vec_Vec3f &path) {
   if (path.size() < 3)
@@ -51,21 +40,21 @@ vec_Vec3f PlannerBase::crop(const vec_Vec3f& path){
   new_path.push_back(path.front());
   for(int i = 1; i < (int) path.size(); i ++)
   {
-    Vec3i pn = _map_util->floatToInt(path[i]);
-    if(_map_util->isOutSide(pn))
+    Vec3i pn = map_util_->floatToInt(path[i]);
+    if(map_util_->isOutSide(pn))
     {
-      vec_Vec3i pns = _map_util->rayTrace(path[i-1], path[i]);
+      vec_Vec3i pns = map_util_->rayTrace(path[i-1], path[i]);
       if(pns.size() > 2)
       {
         bool add_end = false;
         for(const auto& it: pns){
-          if(_map_util->isOccupied(it)){
+          if(map_util_->isOccupied(it)){
             add_end = true;
             break;
           }
         }
         if(!add_end)
-          new_path.push_back(_map_util->intToFloat(pns.back()));
+          new_path.push_back(map_util_->intToFloat(pns.back()));
       }
       break;
     }
@@ -87,7 +76,7 @@ vec_Vec3f PlannerBase::optimize(const vec_Vec3f &path) {
   optimized_path.push_back(pose1);
   decimal_t cost1, cost2, cost3;
 
-  if (!_map_util->isBlocked(pose1, pose2))
+  if (!map_util_->isBlocked(pose1, pose2))
     cost1 = (pose1 - pose2).norm();
   else
     cost1 = std::numeric_limits<decimal_t>::max();
@@ -95,12 +84,12 @@ vec_Vec3f PlannerBase::optimize(const vec_Vec3f &path) {
   for (unsigned int i = 1; i < path.size() - 1; i++) {
     pose1 = path[i];
     pose2 = path[i + 1];
-    if (!_map_util->isBlocked(pose1, pose2))
+    if (!map_util_->isBlocked(pose1, pose2))
       cost2 = (pose1 - pose2).norm();
     else
       cost2 = std::numeric_limits<decimal_t>::max();
 
-    if (!_map_util->isBlocked(prev_pose, pose2))
+    if (!map_util_->isBlocked(prev_pose, pose2))
       cost3 = (prev_pose - pose2).norm();
     else
       cost3 = std::numeric_limits<decimal_t>::max();
@@ -116,4 +105,12 @@ vec_Vec3f PlannerBase::optimize(const vec_Vec3f &path) {
 
   optimized_path.push_back(path.back());
   return optimized_path;
+}
+
+vec_Vec3f PlannerBase::getOpenedCloud() const {
+  vec_Vec3f ps;
+  std::vector<StatePtr> ss = graph_search_->getOpenedState();
+  for(const auto& it: ss) 
+    ps.push_back(map_util_->intToFloat(Vec3i(it->x, it->y, it->z)));
+  return ps;
 }

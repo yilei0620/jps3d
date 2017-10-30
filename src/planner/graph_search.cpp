@@ -3,9 +3,9 @@
 using namespace JPS;
 
 GraphSearch::GraphSearch(const char* cMap, int xDim, int yDim,  double eps, bool verbose) :
-  cMap_(cMap), xDim_(xDim), eps_(eps), verbose_(verbose) 
+  cMap_(cMap), xDim_(xDim), yDim_(yDim), eps_(eps), verbose_(verbose) 
 { 
-  hm_.reserve(xDim_ * yDim_);
+  hm_.resize(xDim_ * yDim_);
   seen_.resize(xDim_ * yDim_, false);
 }
 
@@ -19,6 +19,13 @@ inline bool GraphSearch::isFree(int x, int y) const {
     cMap_[coordToId(x, y)] == val_free_;
 }
 
+inline bool GraphSearch::isOccupied(int x, int y) const {
+  return x >= 0 && x < xDim_ && y >= 0 && y < yDim_ &&
+    cMap_[coordToId(x, y)] > val_free_;
+}
+
+
+
 inline double GraphSearch::get_heur(int x, int y) const {
   return eps_ * std::sqrt((x - xGoal_) * (x - xGoal_) + (y - yGoal_) * (y - yGoal_));
 }
@@ -27,7 +34,7 @@ bool GraphSearch::plan(int xStart, int yStart, int xGoal, int yGoal, int max_exp
 {
   pq_.clear();
   path_.clear();
-  hm_.reserve(xDim_ * yDim_);
+  hm_.resize(xDim_ * yDim_);
   seen_.resize(xDim_ * yDim_, false);
 
   // Set goal
@@ -36,7 +43,7 @@ bool GraphSearch::plan(int xStart, int yStart, int xGoal, int yGoal, int max_exp
   xGoal_ = xGoal; yGoal_ = yGoal;
 
   // Initialize start node
-  StatePtr currNode_ptr = std::make_shared<State>(State(coordToId(xStart, yStart), xStart, yStart, 0, 0));
+  StatePtr currNode_ptr = std::make_shared<State>(State(start_id, xStart, yStart, 0, 0));
   currNode_ptr->g = 0;
   currNode_ptr->h = get_heur(xStart, yStart);
   currNode_ptr->heapkey = pq_.push(currNode_ptr);
@@ -58,11 +65,16 @@ bool GraphSearch::plan(int xStart, int yStart, int xGoal, int yGoal, int max_exp
       break;
     }
 
+    //printf("expand: %d, %d\n", currNode_ptr->x, currNode_ptr->y);
     std::vector<int> succ_ids;
     std::vector<double> succ_costs;
     // Get successors
-    getSucc(currNode_ptr, succ_ids, succ_costs);
+    if(!jps_)
+      getSucc(currNode_ptr, succ_ids, succ_costs);
+    else
+      getJpsSucc(currNode_ptr, succ_ids, succ_costs);
 
+    //printf("size of succs: %zu\n", succ_ids.size());
     // Process successors
     for( int s = 0; s < (int) succ_ids.size(); s++ )
     {
@@ -87,6 +99,7 @@ bool GraphSearch::plan(int xStart, int yStart, int xGoal, int yGoal, int max_exp
         }
         else // new node, add to heap
         {
+          //printf("add to open set: %d, %d\n", child_ptr->x, child_ptr->y);
           child_ptr->heapkey = pq_.push(child_ptr);
           child_ptr->opened = true;
         }
@@ -149,6 +162,157 @@ void GraphSearch::getSucc(const StatePtr& curr, std::vector<int>& succ_ids, std:
   }
 }
 
+void GraphSearch::getJpsSucc(const StatePtr& curr, std::vector<int>& succ_ids, std::vector<double>& succ_costs) {
+  std::vector<std::array<int, 2>> ns = prune(curr->x, curr->y, curr->dx, curr->dy);
+
+  for(const auto& it: ns) {
+    int new_x, new_y;
+    if(jump(curr->x, curr->y, it[0], it[1], new_x, new_y)) {
+      int new_id = coordToId(new_x, new_y);
+      if(!seen_[new_id]) {
+        seen_[new_id] = true;
+        hm_[new_id] = std::make_shared<State>(new_id, new_x, new_y, it[0], it[1]); 
+        hm_[new_id]->h = get_heur(new_x, new_y);
+      }
+
+      succ_ids.push_back(new_id);
+      succ_costs.push_back(std::sqrt((new_x - curr->x) * (new_x - curr->x) + 
+            (new_y - curr->y) * (new_y  - curr->y)));
+    }
+  }
+}
+
+
+bool GraphSearch::jump(int x, int y, int dx, int dy, int& new_x, int& new_y ) {
+  new_x = x + dx;
+  new_y = y + dy;
+  if (!isFree(new_x, new_y))
+    return false;
+
+  //printf("dx: %d, dy: %d\n", dx, dy);
+  if (new_x ==  xGoal_ && new_y == yGoal_)
+    return true;
+
+  if (hasForced(new_x, new_y, dx, dy))
+    return true;
+
+  // Diagonal jump
+  if (std::abs(dx) + std::abs(dy) == 2) {
+    int i = 3 * (dx + 1) + (dy + 1);
+    for (const auto &it : add_map_[i]) {
+      int new_new_x, new_new_y;
+      if (!(it[0] == dx && it[1] == dy) && jump(new_x, new_y, it[0], it[1], new_new_x, new_new_y)) 
+        return true;
+    }
+  }
+
+  return jump(new_x, new_y, dx, dy, new_x, new_y);
+}
+
+bool GraphSearch::hasForced(int x, int y, int dx, int dy) {
+  int i = 3*(dx + 1) + (dy + 1);
+  for (const auto &it : obs_map_[i]) {
+    if (isOccupied(x + it[0], y + it[1])) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+
+std::vector<std::array<int, 2>> GraphSearch::prune(int x, int y, int dx, int dy) {
+  std::vector<std::array<int, 2>> ns;
+  if (dx == 0 && dy == 0) {
+    for(int i = -1; i <= 1; i++) {
+      for(int j = -1; j <= 1; j++) {
+	if(i == 0 && j == 0)
+	  continue;
+	ns.push_back(std::array<int, 2>{i, j});
+      }
+    }
+    return ns;
+  }
+  int dir = 3 * (dx + 1) + (dy + 1);
+  for (const auto &it : add_map_[dir]) 
+    ns.push_back(it);
+
+  if (std::abs(dx) + std::abs(dy) == 1) {
+    for (const auto &it : obs_map_[dir]) {
+      if (isOccupied(x + it[0], y + it[1]) && isFree(x + it[0] + dx, y + it[1] + dy)) 
+        ns.push_back(std::array<int ,2> {it[0] + dx, it[1] + dy});
+    }
+  }
+
+  else if (std::abs(dx) + std::abs(dy) == 2) {
+    for (const auto &it : obs_map_[dir]) {
+      if (isOccupied(x + it[0], y + it[1]) && isFree(x + 2 * it[0] + dx, y + 2 * it[1] + dy))
+        ns.push_back(std::array<int, 2> {2 * it[0] + dx, 2 * it[1] + dy});
+    }
+  }
+
+  return ns;
+}
+
 std::vector<StatePtr> GraphSearch::getPath() const {
   return path_;
+}
+
+std::vector<StatePtr> GraphSearch::getOpenedState() const {
+  std::vector<StatePtr> ss;
+  for(const auto& it: hm_) {
+    if(it && it->opened)
+      ss.push_back(it);
+  }
+  return ss;
+}
+
+void GraphSearch::useJps() {
+  add_map_.resize(9);
+  obs_map_.resize(9);
+  int cnt = 0;
+  //**** neightbors and moves
+  for(int x = -1; x <= 1; x++) {
+    for(int y = -1; y <= 1; y++) {
+      std::vector<std::array<int, 2>> add;
+      std::vector<std::array<int, 2>> obs;
+
+      //*** straight move
+      if ((std::abs(x) == 1 && std::abs(y) != 1) ||
+	  (std::abs(x) != 1 && std::abs(y) == 1)) {
+	add.push_back(std::array<int, 2>{x, y}); 
+
+	for(int dx = -1; dx <= 1; dx++) {
+	  for(int dy = -1; dy <= 1; dy++) {
+	    if (x * dx + y * dy == 0 && !(dx == 0 && dy == 0))
+	      obs.push_back(std::array<int, 2>{dx, dy});
+	  }   
+	}
+      }
+
+      //*** one-d diagonal move
+      else if (std::abs(x) + std::abs(y) == 2) {
+	add.push_back(std::array<int, 2>{x, y});
+	add.push_back(std::array<int, 2>{x, 0});
+	add.push_back(std::array<int, 2>{0, y});
+	obs.push_back(std::array<int, 2>{-x, 0});
+	obs.push_back(std::array<int, 2>{0, -y});
+      }
+
+      //printf("dx: %d, dy: %d --- \n", x, y);
+      add_map_[cnt] = add;
+      //for(const auto& it: add)
+	//printf("add: %d, %d\n", it[0], it[1]);
+      obs_map_[cnt] = obs;
+      //for(const auto& it: obs)
+	//printf("obs: %d, %d\n", it[0], it[1]);
+
+      cnt ++;
+    }
+  }
+  
+  jps_ = true;
+
+  if(verbose_)
+    printf("Use JPS!\n\n");
 }

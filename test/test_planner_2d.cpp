@@ -1,7 +1,6 @@
 #include "timer.hpp"
 #include "read_map.hpp"
-#include <jps3d/yag_planner/a_star_util.h>
-#include <jps3d/yag_planner/jps_2d_util.h>
+#include <jps3d/planner/graph_search_2d_util.h>
 
 #define VISUALIZE 1
 #if VISUALIZE
@@ -26,8 +25,7 @@ int main(int argc, char ** argv){
   }
 
   // store map in map_util
-  std::unique_ptr<VoxelMapUtil> map_util;
-  map_util.reset(new VoxelMapUtil);
+  std::shared_ptr<VoxelMapUtil> map_util = std::make_shared<VoxelMapUtil>();
   map_util->setMap(reader.origin(), reader.dim(), reader.data(), reader.resolution());
   //map_util->dilate(0.1, 0.1);
   //map_util->dilating();
@@ -35,19 +33,19 @@ int main(int argc, char ** argv){
   const Vec3f start(reader.start(0), reader.start(1), reader.start(2));
   const Vec3f goal(reader.goal(0), reader.goal(1), reader.goal(2));
 
-  std::unique_ptr<JPS2DUtil> planner_jps(new JPS2DUtil(true)); // Declare a jps planner
-  planner_jps->setMapUtil(map_util.get()); // Set collision checking function
+  std::unique_ptr<GraphSearch2DUtil> planner_jps(new GraphSearch2DUtil(false)); // Declare a planner
+  planner_jps->setMapUtil(map_util); // Set collision checking function
 
-  std::unique_ptr<PlannerBase> planner_astar(new AStarUtil(true)); // Declare a A* planner
-  planner_astar->setMapUtil(map_util.get()); // Set collision checking function
+  std::unique_ptr<GraphSearch2DUtil> planner_astar(new GraphSearch2DUtil(false)); // Declare a planner
+  planner_astar->setMapUtil(map_util); // Set collision checking function
 
   Timer time_jps(true);
-  bool valid_jps = planner_jps->plan(start, goal); // Plan from start to goal
+  bool valid_jps = planner_jps->plan(start, goal, 1, true); // Plan from start to goal using JPS
   double dt_jps = time_jps.Elapsed().count();
   printf("JPS Planner takes: %f ms\n", dt_jps);
   printf("JPS Path Distance: %f\n", total_distance3f(planner_jps->getRawPath()));
   Timer time_astar(true);
-  bool valid_astar = planner_astar->plan(start, goal); // Plan from start to goal
+  bool valid_astar = planner_astar->plan(start, goal, 1, false); // Plan from start to goal using A*
   double dt_astar = time_astar.Elapsed().count();
   printf("AStar Planner takes: %f ms\n", dt_astar);
   printf("AStar Path Distance: %f\n", total_distance3f(planner_astar->getRawPath()));
@@ -93,16 +91,7 @@ int main(int argc, char ** argv){
       const Vec3i p2 = map_util->floatToInt(path[i+1]);
       imageSource->FillTube(p1[0], p1[1], p2[0], p2[1], 2);
     }
-
-    /*
-    vec_Vec3f ps = planner_jps->ps_;
-    imageSource->SetDrawColor(0.0, 127.0, 255.0);
-    for(int i = 0; i < ps.size(); i++) {
-      Vec3i pn =  map_util->floatToInt(ps[i]);
-      imageSource->DrawCircle(pn(0), pn(1), 1);
-    }
-    */
-  }
+ }
 
   // Draw path from A* as green
   if(valid_astar) {

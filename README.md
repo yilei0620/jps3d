@@ -30,22 +30,25 @@ std::unique_ptr<PlannerBase> planner(new XXXUtil(false)); // Declare a XXX plann
 planner->setMapUtil(MAP_UTIL_PTR); // Set collision checking function
 bool valid = planner->plan(start, goal); // Plan from start to goal
 ```
-In this library, we consider 3D voxel grid but user can write their own 2D map util plugin using the ```MapBaseUtil``` class. Three planners are provided as follows:
- - ```AStarUtil```
- - ```JPS2DUtil```
- - ```JPS3DUtil```
- - ```NXJPS3DUtil```
+In this library, we consider 3D voxel grid but user can write their own 2D map util plugin using the ```MapBaseUtil``` class. Two planners are provided as follows:
+ - ```GraphSearch2DUtil```
+ - ```GraphSearch3DUtil```
 
-The results from ```AStarUtil``` and ```JPS2DUtil``` are plotted in [corridor.jpg](https://github.com/sikang/jps3d/blob/master/data/corridor.jpg).
+The results from ```A*``` and ```JPS``` are plotted in [corridor.jpg](https://github.com/sikang/jps3d/blob/master/data/corridor.jpg).
 Green path is from A*, black path is from JPS.
 
 ![Visualization](./data/corridor.jpg)
 ```sh
 $ ./build/test_planner_2d ../data/corridor.yaml
-JPS Planner takes: 73.000000 ms
-JPS Path Distance: 35.192388
-AStar Planner takes: 317.000000 ms
-AStar Path Distance: 35.192388
+start: 2.5  -2   0
+goal:  35 2.5   0
+origin:  0 -5  0
+dim: 799 199   1
+resolution: 0.05
+JPS Planner takes: 4.000000 ms
+JPS Path Distance: 35.109545
+AStar Planner takes: 77.000000 ms
+AStar Path Distance: 35.109545
 ```
 
 ## Doxygen
